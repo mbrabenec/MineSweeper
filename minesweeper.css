@@ -1,0 +1,77 @@
+
+#messageBox {
+    width: 50%;
+}
+
+table {
+    border: 20px black solid;
+    text-align: center;
+    font-size: 1.5em;
+    border-collapse: collapse;
+}
+
+td {
+    width: 50px;
+    height: 50px;
+    /* background-image: radial-gradient(rgba(84, 97, 81, 0.363),#0f0e0e0c); */
+    border: 1px  black solid;
+    background: lightgray;
+    box-shadow: inset 0 0 15px 1px grey;
+    font-weight: bold;
+}
+
+.flagged {
+    color: red;
+    font: 50px;
+}
+
+.mine {
+    
+    /* background: lightgray center no-repeat url("mine40t.gif"); */
+    background-color: red;
+    box-shadow: none;
+
+}
+
+.black {
+    color: black;
+    background:white;
+    box-shadow: none;
+
+}
+
+.blue	{
+    color: blue;
+    background:white;
+    box-shadow: none;
+
+}
+
+.green {
+    color: green;
+    background:white;
+    box-shadow: none;
+
+}
+
+.red
+{
+    color: red;
+    background:white;
+    box-shadow: none;
+
+}
+
+.lotsaMines
+{
+    color: purple;
+    background:white;
+    box-shadow: none;
+
+}
+
+.noMines {
+    background:white;
+    box-shadow: none;
+
+}
