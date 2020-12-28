@@ -1,6 +1,9 @@
 
 #messageBox {
     width: 50%;
+    text-align: center;
+    font-size: 2em;
+    
 }
 
 table {
@@ -31,6 +34,10 @@ td {
     background-color: red;
     box-shadow: none;
 
+}
+
+.buriedMine {
+    background: lightcoral;               /* BACKGROUND OR BG COLOR???? */
 }
 
 .black {

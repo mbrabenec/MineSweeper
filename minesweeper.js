@@ -1,14 +1,16 @@
 // GLOBALS
 
 var cells = [];         // array of cell objects. Side effect of tableCreate()
-var numOfMines = 20;
-var boardSize = 10;
+var numOfMines = 9;
+var boardSize = 8;
 var ids = [];           // array of cell object IDs. Side effect of tableCreate()
 var FLAG = "&#9873;";
 var MINE = "&#9881;";
 var timeElapsed = 0;
 var clicks = 0;
 var mineKeys;
+var timer;
+var openedCells = new Set();
 
 
 // Board creator - generates table, ID for cell and object for each cell
@@ -70,7 +72,7 @@ Cell.prototype.getNeighbours = function(rowCol) {
 var i = parseInt(rowCol[0]);
 var j = parseInt (rowCol[1]);
 var allNeighbours = [];
-var neighbours = []
+var neighbours = [];
 
         allNeighbours.push([i-1]+["a"]+[j+1]);
         allNeighbours.push([i]+["a"]+[j+1]);
@@ -122,7 +124,7 @@ function mineProcessor(mineKeys) {
         cells[mineKeys[i]].mined = true;
     }
 
-    // Calculate and create nearbyMine property in all objects - if mined, mmine count set to NULL
+    // Calculate and create nearbyMine property in all objects - if mined, mine count set to NULL
     for (param in cells) {
         var a = cells[param].neighbours;
         count = 0;
@@ -152,17 +154,18 @@ function obj(id) {
 
 // Event Listners
 
-function assignListeners() {
+function assignBoardListeners() {
     document.querySelectorAll("td").forEach(item => {
         item.addEventListener("click", listenLC);
         item.addEventListener("contextmenu", listenRC);
     })
-
-    /*
-    var startGameButton = document.getElementById("startButton");
-    startGameButton.addEventListener("click", newGame());
-    */
     
+}
+
+function assignButtonListeners() {
+    var startGameButton = document.getElementById("startButton");                           
+    startGameButton.addEventListener("click", function() {startGame()});                /////callback - if no {}, would fire immediately
+
 }
 
 
@@ -211,46 +214,53 @@ function processLC(targetID) {
             preventLoss(targetID);
         } else {
         a.innerHTML = MINE;
+        targetobj.opened = true;
         a.setAttribute("class", "mine");
-        alert("game over");
+        stopGame();
+        revealBuriedMines();
+        showMessage("BOOM! You lose!");
         }
 
-    } else if (targetobj.minesNearby >= 1){
+    } 
+    else if (targetobj.minesNearby >= 1){
         // if any mines in surrounding 8 cells
         a.innerHTML = targetobj.minesNearby;
         a.setAttribute("class", getNumberColor(targetobj.minesNearby));
         targetobj.opened = true;
+        openedCells.add(targetID);
+        
 
     } else if (targetobj.minesNearby === 0) { 
-        //no mines
-        var results = emptyCalc(targetID);
-        var empties = results[0];
-        var borders = results[1];
 
-        for (i = 0; i < empties.length; i++) {
-            var cellId = empties[i];
+        var results = emptyCalc(targetID);
+
+        for (i = 0; i < results.length; i++) {
+            
+            var cellId = results[i];
             var cellObj = obj(cellId);
+            
             if (cellObj.flagged === true) {
                 // no action
+
             } else {
                 cellObj.opened = true;
                 var b = document.getElementById(cellId);
-                b.innerHTML = "";
                 b.setAttribute("class", getNumberColor(cellObj.minesNearby));
-            }
-        }
+                openedCells.add(targetID);
 
-        for (i = 0; i < borders.length; i++) {
-            processLC(borders[i]);
+                if (cellObj.minesNearby > 0) {
+                    b.innerHTML = cellObj.minesNearby;
+                } else {
+                    b.innerHTML = "";
+                }
             }
         }
+    }
+
 }
 
 
-
-
 function preventLoss (targetID) {
-    console.log(mineKeys);
     var targetID = targetID;
     var targetObj = obj(targetID);
     
@@ -259,8 +269,6 @@ function preventLoss (targetID) {
             var problemMineRef = i;
         }
     }
-
-    console.log(problemMineRef);
 
     var j = 0;
     do {
@@ -280,21 +288,6 @@ function preventLoss (targetID) {
     processLC(targetID);
 
 }
-
-/*
-do {
-    var randomInt = Math.floor(Math.random() * (cells.length));
-    if (mineKeys.indexOf() >= 0) {
-        
-    } else {
-        mineKeys.push(randomInt);
-        i++;
-    }
-} while (i < numberRequired);
-return mineKeys;
-*/
-
-
 
 
 // determines color of innerHTML mine numer text.
@@ -326,37 +319,38 @@ function getNumberColor(number) {
 
 function emptyCalc(targetID) {
 
-    var allToOpen = [];             // all explored cells. Checked to avoid re-adding them to hash-array
-    var hashedTrueEmpties = [];     // hash-array of neighbours with no mines, to check neighbours of
+    var checkedCells = [];          // all explored cells. Checked to avoid re-adding them to = queue
+    var emptiesQueue = [];          //  queue of neighbours with no mines, to check neighbours of
     var linkedBorder = [];          // edge cases that have a mine nearby.
     var linkedEmpties = [];         // ...and mine free
 
-    hashedTrueEmpties.push(targetID);                   // clicked initital value for hash-arry
+    emptiesQueue.push(targetID);
+    linkedEmpties.push(targetID);
+    checkedCells.push(targetID);                   
 
-    while (hashedTrueEmpties.length > 0) {              // start search for auto-reveal linked cells
-        var targetID = hashedTrueEmpties.shift();       // remove the initial clicked value
+    while (emptiesQueue.length > 0) {              // start search for auto-reveal linked cells
+        var targetID = emptiesQueue.shift();       // remove the initial clicked value
         var targetObj = obj(targetID);
 
         for (i in targetObj.neighbours) {
             var nID = targetObj.neighbours[i];
             var nObj = obj(nID);
-            if ((nObj.minesNearby === 0) && ((allToOpen.indexOf(nID) < 0))) {
-                allToOpen.push(nID);
-                hashedTrueEmpties.push(nID);            // new cells with no mines nearby added to hash
+            if ((nObj.minesNearby === 0) && ((checkedCells.indexOf(nID) < 0))) {
+                checkedCells.push(nID);
+                emptiesQueue.push(nID);            // new cells with no mines nearby added to queue
                 linkedEmpties.push(nID);
-            } else if ((nObj.minesNearby > 0) && ((allToOpen.indexOf(nID) < 0))) {
-                allToOpen.push(nID);
+            } else if ((nObj.minesNearby > 0) && ((checkedCells.indexOf(nID) < 0))) {
+                checkedCells.push(nID);
                 linkedBorder.push(nID);
             }
         }
     }
 
-var results = [];
-linkedEmpties.push(targetID);  // add back as if lone clear cell, doesn't get returned by a neighbour
-results[0] = linkedEmpties;
-results[1] = linkedBorder;
-return results;
+return linkedBorder.concat(linkedEmpties);
+
 }
+
+
 
 // Timer
 
@@ -370,42 +364,65 @@ function stopTime() {
     clearInterval(timer);
 }
 
+function showMessage(message) {
+    var dispBox = document.getElementById("messageBox")
+    dispBox.innerHTML = message;
+}
 
 
-function newGame() {
-    
-    /*
-    cells.length = 0;
-    ids.length = 0;
-    timeElpased = 0
-    clicks = 0
-    mineKeys.length = 0;
-*/
+function checkVictory() {
 
-    tableCreate(boardSize);
-
-    /*
-    mineKeys = mineRandomiser(cells, numOfMines);
-    mineProcessor(mineKeys);
-    assignListeners();
-    console.log(cells);
-
-    var timer = setInterval(function() {updateTime()}, 1000); 
-*/
-
-
+    const unminedCells = (boardSize * boardSize) - numOfMines;
+    if (openedCells === unminedCells) return true;
 
 }
 
+
+function revealBuriedMines() {
+
+    let toReveal = [];
+    for (param of cells) {
+        if ((param.mined === true) && (param.opened === false)) {
+            toReveal.push(param.id);
+        }
+    }
+
+console.log(toReveal);
+
+    for (let i = 0; i < toReveal.length; i++) {
+        let minedSq = document.getElementById(toReveal[i]);
+        minedSq.setAttribute("class", "buriedMine");
+    }
+}
+
+function startGame() {
+
+    assignBoardListeners();
+    timer = setInterval(function() {updateTime()}, 1000); 
+
+}
+
+function stopGame() {
+    stopTime();
+
+}
+
+function initGame() {
+    
+    tableCreate(boardSize);
+    mineKeys = mineRandomiser(cells, numOfMines);
+    mineProcessor(mineKeys);
+    assignButtonListeners();
+    
+}
+
+
+
+
+
 // Execute
 
-tableCreate(boardSize);
-mineKeys = mineRandomiser(cells, numOfMines);
-mineProcessor(mineKeys);
-assignListeners();
-console.log(cells);
-
-var timer = setInterval(function() {updateTime()}, 1000); 
+initGame();
 
 
 
