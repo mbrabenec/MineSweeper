@@ -1,13 +1,23 @@
-
-#messageBox {
-    width: 50%;
-    text-align: center;
-    font-size: 2em;
-    
+* {
+    box-sizing: border-box;
 }
 
+body {
+    background: lightblue;
+}
+
+#board {
+    margin: 2rem;
+}
+
+#messageBox, #timeLine, button {
+    margin: 0 0 0.5rem 2rem;
+    font-size: 1rem;
+}
+
+
 table {
-    border: 20px black solid;
+    border: 2px black solid;
     text-align: center;
     font-size: 1.5em;
     border-collapse: collapse;
@@ -16,12 +26,13 @@ table {
 td {
     width: 50px;
     height: 50px;
-    /* background-image: radial-gradient(rgba(84, 97, 81, 0.363),#0f0e0e0c); */
     border: 1px  black solid;
     background: lightgray;
     box-shadow: inset 0 0 15px 1px grey;
     font-weight: bold;
 }
+
+/* mine and flag related */
 
 .flagged {
     color: red;
@@ -29,56 +40,44 @@ td {
 }
 
 .mine {
-    
-    /* background: lightgray center no-repeat url("mine40t.gif"); */
     background-color: red;
     box-shadow: none;
-
 }
 
 .buriedMine {
-    background: lightcoral;               /* BACKGROUND OR BG COLOR???? */
+    background: lightcoral;            
 }
+
+/* colours of revealed numbers */
 
 .black {
     color: black;
     background:white;
     box-shadow: none;
-
 }
-
 .blue	{
     color: blue;
     background:white;
     box-shadow: none;
-
 }
-
 .green {
     color: green;
     background:white;
     box-shadow: none;
-
 }
-
 .red
 {
     color: red;
     background:white;
     box-shadow: none;
-
 }
-
 .lotsaMines
 {
     color: purple;
     background:white;
     box-shadow: none;
-
 }
-
 .noMines {
     background:white;
     box-shadow: none;
-
 }
